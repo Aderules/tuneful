@@ -5,14 +5,16 @@ from sqlalchemy import Column, Integer, String, Sequence, ForeignKey
 from sqlalchemy.orm import relationship
 
 from tuneful import app
-from .database import Base, engine
+from .database import Base, engine,session
 
 class File(Base):
     __tablename__ = 'files'
     
     id = Column(Integer, primary_key=True)
     name = Column(String (128))
-    song = relationship("Song", backref="filename")
+    song = relationship("Song", backref="filename", uselist=False)
+    
+    #how to see the table with \d+ 
     
     def as_dictionary(self):
         file = {
@@ -26,16 +28,14 @@ class Song(Base):
     __tablename__ = 'songs'
     
     id = Column(Integer,primary_key=True)
-    file_id = Column(Integer, ForeignKey('files.id'), nullable=False)
+    file = Column(Integer, ForeignKey('files.id'), nullable=False)
   
     
     def as_dictionary(self):
-        song = {
+        file_dict=session.query(File).get(self.id).as_dictionary()
+        song= {
             "id": self.id,
-            "file": {
-                "id": self.file.id,
-                "name": self.file.name
-            }
+            "file": file_dict
         }
         return song
 
