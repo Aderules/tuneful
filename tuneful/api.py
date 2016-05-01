@@ -12,6 +12,7 @@ from .database import session
 from .utils import upload_path
 
 
+
 @app.route("/api/songs", methods=["GET"])
 @decorators.accept("application/json")
 def songs_get():
@@ -23,6 +24,25 @@ def songs_get():
     #Convert the songs to JSON and return a response
     data = json.dumps([song.as_dictionary() for song in songs])
     return Response(data, 200, mimetype="application/json")
+    
+@app.route("/api/songs/<int:id>", methods=["GET"])
+@decorators.accept("application/json")
+def song_get(id):
+    """ Single song endpoint """
+    #Get the post from the database
+    song = session.query(models.Song).get(id)
+    
+    #Check whether the song exists
+    #if not return a 404 with a helpful message
+    if not song:
+        message = "Could not find song with id {}". format(id)
+        data = json.dumps({"message": message})
+        return Response(data, 404, mimetype="application/json")
+        
+    #Return the song as JSON
+    data = json.dumps(song.as_dictionary())
+    return Response(data, 200, mimetype="application/json")    
+
     
 @app.route("/api/songs", methods=["POST"])
 @decorators.accept("application/json")
@@ -49,15 +69,14 @@ def songs_post():
 @app.route("/api/songs/<int:id>", methods=["PUT"])
 @decorators.accept("application/json")
 @decorators.require("application/json")
-def songs_put():
+def songs_put(id):
     """edit existing song"""
     data=request.json
     
-    
     file=session.query(models.File).get(id)
-    file.name=data["name"]
+    file.name=data["file"]["name"]
     file.id=id
-    
+   
     session.add(file)
     session.commit()
     
@@ -65,10 +84,24 @@ def songs_put():
     #Return a 201 Created, containing the post as JSON and with the 
     #Location header set to the location of the post
     data=json.dumps(file.as_dictionary())
-    headers={"Location": url_for("songs_get", id=file.id)} 
+    headers={"Location": url_for("song_get", id=file.id)} 
     return Response(data, 201, headers=headers, mimetype="application/json")
     
     
+@app.route("/api/songs/<int:id>", methods=["DELETE"])
+@decorators.accept("application/json")
+@decorators.require("application/json")
+def songs_delete(id):
+    """delete existing song"""
+    
+    file = session.query(models.File).get(id)
+
+    # delete file
+    session.delete(file)
+    session.commit()
+    print(file)
+    
+    return Response('', 204)
     
     
     

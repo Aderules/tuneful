@@ -41,10 +41,6 @@ class TestAPI(unittest.TestCase):
     def test_get_songs(self):
         """ Getting songs from a populated database """
         fileA=models.File(name="Shady_Grove.mp3")
-        #songA = models.Song(file_id=fileA.id) gave this error sqlalchemy.exc.IntegrityError: 
-        #(psycopg2.IntegrityError) null value in column "file_id" violates not-null constraint
-        #DETAIL:  Failing row contains (1, null).
-        #[SQL: 'INSERT INTO songs (file_id) VALUES (%(file_id)s) RETURNING songs.id'] [parameters: {'file_id': None}]
         
         songA=models.Song(filename=fileA)
         session.add_all([songA,fileA])
@@ -67,11 +63,6 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(fileA.name, "Shady_Grove.mp3")
         self.assertEqual(songA["id"], 1)
         
-
-#Traceback (most recent call last):
-  #File "/home/ubuntu/workspace/tuneful/tests/api_tests.py", line 67, in test_get_songs
-   # self.assertEqual(fileA["name"], "Shady_Grove.mp3")
-#TypeError: 'File' object is not subscriptable
 
     def test_post_song(self):
         """Testing post songs endpoint"""
@@ -100,8 +91,7 @@ class TestAPI(unittest.TestCase):
         data=json.loads(response.data.decode("ascii"))
         self.assertEqual(data["id"],1)
         self.assertEqual(file.name,"Shady_Grove.mp3" )
-        #song=models.Song(filename=file)
-        
+     
         
     def test_put_song(self):
         file=models.File(name="Shady_Grove.mp3")
@@ -109,8 +99,10 @@ class TestAPI(unittest.TestCase):
         session.commit()
         
         data = {
+               "file":{
                 "name":"gees.mp3"
                     }
+                }
             
 
         #Check request to endpoint is succesful
@@ -120,10 +112,19 @@ class TestAPI(unittest.TestCase):
         
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.mimetype, "application/json")
-        
         self.assertEqual(urlparse(response.headers.get("Location")).path,"/api/songs/{}".format(file.id))
         
         
+    def test_delete_song(self):
+        """ delete songs from database """
+        
+        fileA=models.File(name="Shady_Grove.mp3")
+    
+        session.add(fileA)
+        session.commit()
+      
+        response = self.client.delete("/api/songs/{}".format(fileA.id),content_type="application/json",headers=[("Accept", "application/json")])
+        self.assertEqual(response.status_code, 204)
 
 
     def tearDown(self):
