@@ -99,7 +99,6 @@ def songs_delete(id):
     # delete file
     session.delete(file)
     session.commit()
-    print(file)
     
     return Response('', 204)
     

@@ -125,7 +125,6 @@ class TestAPI(unittest.TestCase):
       
         response = self.client.delete("/api/songs/{}".format(fileA.id),content_type="application/json",headers=[("Accept", "application/json")])
         self.assertEqual(response.status_code, 204)
-        #why putting content_type worked here and not in posts api
         
         
         
